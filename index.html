@@ -1,0 +1,380 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ranking Ale Teca | Pádel</title>
+<style>
+:root {
+  --dark: #12372b;
+  --green: #1b7650;
+  --lime: #c9f36b;
+  --bg: #f3f6f2;
+  --white: #ffffff;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: #20352c;
+}
+header {
+  background: var(--dark);
+  color: white;
+  padding: 28px 18px;
+  text-align: center;
+}
+header .ball {
+  font-size: 32px;
+}
+header h1 {
+  margin: 8px 0;
+  font-size: 30px;
+}
+header p { margin: 0; color: #d7e8dd; }
+main {
+  width: min(100% - 28px, 950px);
+  margin: 24px auto;
+}
+nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+nav button {
+  flex: 1;
+  min-width: 100px;
+  border: 0;
+  border-radius: 10px;
+  padding: 13px 10px;
+  font-weight: bold;
+  background: white;
+  color: var(--dark);
+  cursor: pointer;
+}
+nav button.active {
+  background: var(--green);
+  color: white;
+}
+.panel {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 18px;
+  box-shadow: 0 3px 15px #183c2810;
+}
+h2 { margin-top: 0; color: var(--dark); }
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.stat {
+  background: #e6f2e9;
+  padding: 17px 10px;
+  border-radius: 12px;
+  text-align: center;
+}
+.stat strong {
+  display: block;
+  font-size: 26px;
+  color: var(--green);
+}
+.stat span { font-size: 13px; }
+form { display: grid; gap: 12px; }
+label { font-weight: bold; font-size: 14px; }
+input, select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d3ded6;
+  border-radius: 9px;
+  font-size: 16px;
+  background: white;
+}
+button.primary {
+  background: var(--green);
+  color: white;
+  border: 0;
+  padding: 13px;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+button.danger {
+  background: #fff0ed;
+  color: #a13225;
+  border: 0;
+  padding: 8px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td {
+  padding: 12px 9px;
+  text-align: left;
+  border-bottom: 1px solid #e7ece8;
+  white-space: nowrap;
+}
+th { color: #5a7063; font-size: 12px; }
+.rank { font-weight: bold; color: var(--green); }
+.hidden { display: none; }
+.empty { color: #718077; padding: 12px 0; }
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #6c7e72;
+  font-size: 13px;
+}
+@media (max-width: 520px) {
+  header h1 { font-size: 25px; }
+  .panel { padding: 16px; }
+  .stats { gap: 7px; }
+  .stat strong { font-size: 22px; }
+  .stat span { font-size: 11px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="ball">🎾</div>
+  <h1>RANKING ALE TECA</h1>
+  <p>Tu pasión por el pádel, tu lugar en el ranking.</p>
+</header>
+
+<main>
+  <nav>
+    <button class="active" data-tab="ranking">🏆 Ranking</button>
+    <button data-tab="jugadores">👥 Jugadores</button>
+    <button data-tab="partidos">🎾 Partidos</button>
+  </nav>
+
+  <section id="ranking">
+    <div class="stats">
+      <div class="stat"><strong id="totalJugadores">0</strong><span>Jugadores</span></div>
+      <div class="stat"><strong id="totalPartidos">0</strong><span>Partidos</span></div>
+      <div class="stat"><strong id="lider">—</strong><span>Líder actual</span></div>
+    </div>
+    <div class="panel">
+      <h2>🏆 Clasificación individual</h2>
+      <p class="empty">El ranking se ordena por victorias y luego por puntos.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Puesto</th><th>Jugador</th><th>PJ</th><th>PG</th><th>PP</th><th>Puntos</th></tr></thead>
+          <tbody id="tablaRanking"></tbody>
+        </table>
+      </div>
+      <p id="sinRanking" class="empty">Todavía no hay jugadores. ¡Registrá el primero!</p>
+    </div>
+  </section>
+
+  <section id="jugadores" class="hidden">
+    <div class="panel">
+      <h2>➕ Registrar jugador</h2>
+      <form id="formJugador">
+        <label for="nombreJugador">Nombre y apellido</label>
+        <input id="nombreJugador" maxlength="60" placeholder="Ej. Juan Pérez" required>
+        <button class="primary" type="submit">Agregar jugador</button>
+      </form>
+    </div>
+    <div class="panel">
+      <h2>Lista de jugadores</h2>
+      <div id="listaJugadores"></div>
+    </div>
+  </section>
+
+  <section id="partidos" class="hidden">
+    <div class="panel">
+      <h2>🎾 Cargar resultado</h2>
+      <form id="formPartido">
+        <label for="jugadorA">Jugador 1</label>
+        <select id="jugadorA" required></select>
+        <label for="jugadorB">Jugador 2</label>
+        <select id="jugadorB" required></select>
+        <label for="ganador">Ganador del partido</label>
+        <select id="ganador" required></select>
+        <button class="primary" type="submit">Guardar resultado</button>
+      </form>
+      <p class="empty">Sistema inicial: 3 puntos por victoria y 0 por derrota.</p>
+    </div>
+    <div class="panel">
+      <h2>Últimos resultados</h2>
+      <div id="listaPartidos"></div>
+    </div>
+  </section>
+</main>
+
+<footer>Ranking Ale Teca · Pádel para todos</footer>
+
+<script>
+const STORAGE_PLAYERS = "aleTecaJugadores";
+const STORAGE_MATCHES = "aleTecaPartidos";
+
+let jugadores = JSON.parse(localStorage.getItem(STORAGE_PLAYERS) || "[]");
+let partidos = JSON.parse(localStorage.getItem(STORAGE_MATCHES) || "[]");
+
+function guardar() {
+  localStorage.setItem(STORAGE_PLAYERS, JSON.stringify(jugadores));
+  localStorage.setItem(STORAGE_MATCHES, JSON.stringify(partidos));
+  renderizar();
+}
+
+function cambiarPestana(nombre) {
+  document.querySelectorAll("main section").forEach(s => s.classList.add("hidden"));
+  document.getElementById(nombre).classList.remove("hidden");
+  document.querySelectorAll("nav button").forEach(b =>
+    b.classList.toggle("active", b.dataset.tab === nombre)
+  );
+}
+
+document.querySelectorAll("nav button").forEach(b =>
+  b.addEventListener("click", () => cambiarPestana(b.dataset.tab))
+);
+
+document.getElementById("formJugador").addEventListener("submit", e => {
+  e.preventDefault();
+  const campo = document.getElementById("nombreJugador");
+  const nombre = campo.value.trim();
+  if (!nombre) return;
+  if (jugadores.some(j => j.nombre.toLowerCase() === nombre.toLowerCase())) {
+    alert("Ese jugador ya está registrado.");
+    return;
+  }
+  jugadores.push({ id: crypto.randomUUID(), nombre });
+  campo.value = "";
+  guardar();
+});
+
+document.getElementById("formPartido").addEventListener("submit", e => {
+  e.preventDefault();
+  const a = document.getElementById("jugadorA").value;
+  const b = document.getElementById("jugadorB").value;
+  const ganador = document.getElementById("ganador").value;
+  if (jugadores.length < 2) {
+    alert("Primero registrá al menos dos jugadores.");
+    return;
+  }
+  if (a === b) {
+    alert("Elegí dos jugadores diferentes.");
+    return;
+  }
+  if (ganador !== a && ganador !== b) {
+    alert("Seleccioná como ganador a uno de los dos jugadores.");
+    return;
+  }
+  partidos.unshift({
+    id: crypto.randomUUID(),
+    jugadorA: a,
+    jugadorB: b,
+    ganador,
+    fecha: new Date().toLocaleDateString("es-MX")
+  });
+  guardar();
+});
+
+function estadisticas() {
+  return jugadores.map(j => {
+    const jugados = partidos.filter(p => p.jugadorA === j.id || p.jugadorB === j.id);
+    const ganados = jugados.filter(p => p.ganador === j.id).length;
+    return {
+      ...j,
+      pj: jugados.length,
+      pg: ganados,
+      pp: jugados.length - ganados,
+      puntos: ganados * 3
+    };
+  }).sort((a, b) =>
+    b.pg - a.pg || b.puntos - a.puntos || a.nombre.localeCompare(b.nombre)
+  );
+}
+
+function agregarOpcion(select, valor, texto) {
+  const option = document.createElement("option");
+  option.value = valor;
+  option.textContent = texto;
+  select.appendChild(option);
+}
+
+function renderizar() {
+  const ranking = estadisticas();
+  document.getElementById("totalJugadores").textContent = jugadores.length;
+  document.getElementById("totalPartidos").textContent = partidos.length;
+  document.getElementById("lider").textContent =
+    ranking.length && ranking[0].pg > 0 ? ranking[0].nombre.split(" ")[0] : "—";
+
+  const tabla = document.getElementById("tablaRanking");
+  tabla.replaceChildren();
+  ranking.forEach((j, i) => {
+    const tr = document.createElement("tr");
+    [i + 1, j.nombre, j.pj, j.pg, j.pp, j.puntos].forEach((v, idx) => {
+      const td = document.createElement("td");
+      td.textContent = v;
+      if (idx === 0) td.className = "rank";
+      tr.appendChild(td);
+    });
+    tabla.appendChild(tr);
+  });
+  document.getElementById("sinRanking").classList.toggle("hidden", jugadores.length > 0);
+
+  const lista = document.getElementById("listaJugadores");
+  lista.replaceChildren();
+  if (!jugadores.length) lista.innerHTML = '<p class="empty">Todavía no hay jugadores registrados.</p>';
+  jugadores.forEach(j => {
+    const fila = document.createElement("p");
+    fila.style.display = "flex";
+    fila.style.justifyContent = "space-between";
+    fila.style.alignItems = "center";
+    const nombre = document.createElement("span");
+    nombre.textContent = j.nombre;
+    const borrar = document.createElement("button");
+    borrar.className = "danger";
+    borrar.textContent = "Eliminar";
+    borrar.addEventListener("click", () => {
+      if (!confirm("¿Eliminar a " + j.nombre + " y sus partidos?")) return;
+      jugadores = jugadores.filter(x => x.id !== j.id);
+      partidos = partidos.filter(p => p.jugadorA !== j.id && p.jugadorB !== j.id);
+      guardar();
+    });
+    fila.append(nombre, borrar);
+    lista.appendChild(fila);
+  });
+
+  const selects = ["jugadorA", "jugadorB", "ganador"];
+  selects.forEach(id => {
+    const s = document.getElementById(id);
+    const anterior = s.value;
+    s.replaceChildren();
+    agregarOpcion(s, "", "Seleccionar jugador");
+    jugadores.forEach(j => agregarOpcion(s, j.id, j.nombre));
+    if (jugadores.some(j => j.id === anterior)) s.value = anterior;
+  });
+
+  const historial = document.getElementById("listaPartidos");
+  historial.replaceChildren();
+  if (!partidos.length) {
+    historial.innerHTML = '<p class="empty">Todavía no hay partidos cargados.</p>';
+  } else {
+    partidos.forEach(p => {
+      const a = jugadores.find(j => j.id === p.jugadorA);
+      const b = jugadores.find(j => j.id === p.jugadorB);
+      if (!a || !b) return;
+      const fila = document.createElement("p");
+      fila.textContent = a.nombre + " vs. " + b.nombre +
+        " · Ganó: " + jugadores.find(j => j.id === p.ganador).nombre +
+        " · " + p.fecha;
+      fila.style.padding = "10px 0";
+      fila.style.borderBottom = "1px solid #e7ece8";
+      historial.appendChild(fila);
+    });
+  }
+}
+
+renderizar();
+</script>
+</body>
+</html>
